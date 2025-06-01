@@ -1,33 +1,55 @@
 package com.aoopproject.framework.core;
 
+import com.aoopproject.common.action.NewGameAction;
+import com.aoopproject.common.action.QuitAction;
+import com.aoopproject.common.action.UndoAction;
+import com.aoopproject.common.score.ScoreEntry;
+
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
-import java.util.ArrayDeque;
-import java.util.Deque;
 
 /**
- * An abstract base class for game models in the framework.
- * It manages the game's state (like score and {@link GameStatus}),
- * a list of {@link GameObserver}s, and provides core functionalities
- * for notifying observers about {@link GameEvent}s.
+ * An abstract base class for game models in the AOOP Project framework.
+ * It manages the fundamental aspects of a game, including:
+ * <ul>
+ * <li>The game board (as a {@link Grid} of {@link GameEntity}s).</li>
+ * <li>The current score.</li>
+ * <li>The current {@link GameStatus} (e.g., PLAYING, GAME_OVER_WIN).</li>
+ * <li>A list of {@link GameObserver}s to be notified of {@link GameEvent}s.</li>
+ * <li>A history stack ({@code Deque<Object>}) for implementing undo functionality.</li>
+ * </ul>
+ * This class provides a template for action processing by handling common framework
+ * actions (New Game, Undo, Quit) in its final {@link #processInputAction(GameAction)} method
+ * and delegating game-specific actions to the abstract {@link #processGameSpecificAction(GameAction)}
+ * method, which must be implemented by concrete game models.
  * <p>
- * Concrete game implementations (e.g., {@code SameGameModel}, {@code TwentyFortyEightModel})
- * must extend this class and implement its abstract methods to define
- * game-specific logic such as board initialization, action processing,
- * and win/loss conditions.
+ * Concrete game implementations (e.g., {@code SameGameModel}, {@code SokobanModel})
+ * must extend this class and implement all its abstract methods to define game-specific
+ * logic for initialization, action processing, validation, win/loss conditions, undo/redo,
+ * and view representations.
+ * </p>
  */
 public abstract class AbstractGameModel {
 
+    /** The game board holding game entities. Must be initialized by subclasses. */
     protected Grid<? extends GameEntity> gameBoard;
+    /** The current score of the game. */
     protected int score;
+    /** The current status of the game (e.g., PLAYING, GAME_OVER_WIN). */
     protected GameStatus currentStatus;
+    /** List of registered observers to be notified of game events. */
     private final List<GameObserver> observers;
+    /** Stack to store game states for undo functionality. Subclasses manage the type of state objects. */
     protected final Deque<Object> historyStack;
 
     /**
-     * Constructs an AbstractGameModel, initializing the observer list
-     * and setting the initial game status to INITIALIZING.
+     * Constructs an {@code AbstractGameModel}.
+     * Initializes the list of observers, sets the initial score to 0,
+     * the initial game status to {@link GameStatus#INITIALIZING},
+     * and initializes the history stack for undo operations.
      */
     protected AbstractGameModel() {
         this.observers = new ArrayList<>();
@@ -37,10 +59,10 @@ public abstract class AbstractGameModel {
     }
 
     /**
-     * Adds a {@link GameObserver} to be notified of game events.
-     * If the observer is null or already registered, it will not be added again.
+     * Adds a {@link GameObserver} to the list of observers to be notified of game events.
+     * The observer will not be added if it is {@code null} or already registered.
      *
-     * @param observer The observer to add.
+     * @param observer The {@code GameObserver} to add.
      */
     public final void addObserver(GameObserver observer) {
         if (observer != null && !observers.contains(observer)) {
@@ -50,21 +72,24 @@ public abstract class AbstractGameModel {
 
     /**
      * Removes a {@link GameObserver} from the list of observers.
+     * If the observer is not in the list, this method does nothing.
      *
-     * @param observer The observer to remove.
+     * @param observer The {@code GameObserver} to remove.
      */
     public final void removeObserver(GameObserver observer) {
         this.observers.remove(observer);
     }
 
     /**
-     * Notifies all registered observers about a specific game event.
+     * Notifies all registered {@link GameObserver}s about a specific {@link GameEvent}.
+     * Iterates over a copy of the observer list to allow observers to unregister themselves
+     * during event notification without causing a {@code ConcurrentModificationException}.
      *
-     * @param event The {@link GameEvent} to propagate to observers.
-     * Must not be null.
+     * @param event The {@link GameEvent} to propagate to observers. Must not be {@code null}.
+     * @throws NullPointerException if the event is {@code null}.
      */
     protected final void notifyObservers(GameEvent event) {
-        Objects.requireNonNull(event, "GameEvent cannot be null");
+        Objects.requireNonNull(event, "GameEvent cannot be null when notifying observers.");
         for (GameObserver observer : new ArrayList<>(observers)) {
             observer.onGameEvent(event);
         }
@@ -73,15 +98,18 @@ public abstract class AbstractGameModel {
     /**
      * Gets the current score of the game.
      *
-     * @return The current score.
+     * @return The current integer score.
      */
     public int getScore() {
         return score;
     }
 
     /**
-     * Sets the current score and notifies observers with a "SCORE_UPDATED" event.
-     * @param newScore The new score.
+     * Sets the current score of the game.
+     * If the new score is different from the current score, it updates the score
+     * and notifies all registered observers with a "SCORE_UPDATED" {@link GameEvent}.
+     *
+     * @param newScore The new score to set.
      */
     protected void setScore(int newScore) {
         if (this.score != newScore) {
@@ -100,12 +128,15 @@ public abstract class AbstractGameModel {
     }
 
     /**
-     * Sets the current game status and notifies observers with a "STATUS_CHANGED" event.
+     * Sets the current status of the game.
+     * If the new status is different from the current status, it updates the status
+     * and notifies all registered observers with a "STATUS_CHANGED" {@link GameEvent}.
      *
-     * @param newStatus The new {@link GameStatus}. Must not be null.
+     * @param newStatus The new {@link GameStatus} to set. Must not be {@code null}.
+     * @throws NullPointerException if newStatus is {@code null}.
      */
     protected void setCurrentStatus(GameStatus newStatus) {
-        Objects.requireNonNull(newStatus, "New status cannot be null");
+        Objects.requireNonNull(newStatus, "GameStatus cannot be set to null.");
         if (this.currentStatus != newStatus) {
             this.currentStatus = newStatus;
             notifyObservers(new GameEvent(this, "STATUS_CHANGED", this.currentStatus));
@@ -114,77 +145,157 @@ public abstract class AbstractGameModel {
 
     /**
      * Retrieves the current game board.
-     * The board might be null if the game has not been initialized yet.
+     * The board might be {@code null} if the game has not been initialized yet
+     * via {@link #initializeGame()}.
      *
-     * @return The {@link Grid} representing the game board.
+     * @return The {@link Grid} representing the game board, or {@code null} if not initialized.
      */
     public Grid<? extends GameEntity> getGameBoard() {
         return gameBoard;
     }
 
     /**
-     * Initializes the game board and resets the game state (score, status, etc.).
-     * This method should set up the initial configuration of the game.
-     * After initialization, the status should typically be set to PLAYING or READY_TO_START.
-     * It should also notify observers that the board has changed.
+     * Called to indicate that a new high score has been officially achieved and recorded.
+     * The model can then fire an appropriate event (e.g., "NEW_HIGH_SCORE_ACHIEVED")
+     * for observers like a sound manager or other UI components to react to.
+     *
+     * @param scoreDetails Optional: Details of the high score, such as the {@link ScoreEntry} object
+     * or any relevant information. Can be null if the event is just a signal.
+     */
+    public void newHighScoreAchieved(Object scoreDetails) {
+        System.out.println("AbstractGameModel: New high score reported by view. Firing NEW_HIGH_SCORE_ACHIEVED event.");
+        notifyObservers(new GameEvent(this, "NEW_HIGH_SCORE_ACHIEVED", scoreDetails));
+    }
+
+    /**
+     * Central dispatcher for processing all game actions.
+     * This method handles common framework-level actions such as starting a new game
+     * ({@link NewGameAction}), undoing the last move ({@link UndoAction}),
+     * and quitting the game ({@link QuitAction}).
+     * <p>
+     * For actions specific to the concrete game implementation, this method delegates
+     * to the {@link #processGameSpecificAction(GameAction)} method, but only if the
+     * game is currently in the {@link GameStatus#PLAYING} state.
+     * </p>
+     * This method is {@code final} to ensure a consistent action processing pipeline
+     * across all game models.
+     *
+     * @param action The {@link GameAction} to process. If {@code null}, an error is logged.
+     */
+    public final void processInputAction(GameAction action) {
+        if (action == null) {
+            System.err.println("AbstractGameModel: Received a null action. Action ignored.");
+            return;
+        }
+        if (action instanceof NewGameAction) {
+            System.out.println("AbstractGameModel: Processing NewGameAction - initializing game.");
+            initializeGame();
+            return;
+        }
+
+        if (action instanceof UndoAction) {
+            System.out.println("AbstractGameModel: Processing UndoAction.");
+            if (canUndo()) {
+                undoLastMove();
+            } else {
+                System.out.println("AbstractGameModel: Cannot undo - no history or action not permitted.");
+                notifyObservers(new GameEvent(this, "UNDO_FAILED", "No history or undo not allowed."));
+            }
+            return;
+        }
+
+        if (action instanceof QuitAction) {
+            System.out.println("AbstractGameModel: Processing QuitAction - setting status to GAME_ENDED_USER_QUIT.");
+            setCurrentStatus(GameStatus.GAME_ENDED_USER_QUIT);
+            notifyObservers(new GameEvent(this, "GAME_ENDED_BY_USER_QUIT_EVENT", null));
+            return;
+        }
+        if (getCurrentStatus() != GameStatus.PLAYING) {
+            System.out.println("AbstractGameModel: Action '" + action.getName() +
+                    "' ignored as game is not in PLAYING state. Current status: " + getCurrentStatus());
+            return;
+        }
+        System.out.println("AbstractGameModel: Delegating action '" + action.getName() + "' to processGameSpecificAction.");
+        processGameSpecificAction(action);
+    }
+
+    /**
+     * Initializes or resets the game to its starting state specific to the concrete game.
+     * This typically involves setting up the game board ({@link #gameBoard}),
+     * resetting the score ({@link #score}), setting the {@link #currentStatus}
+     * (usually to {@link GameStatus#PLAYING}), clearing any history ({@link #historyStack}),
+     * and notifying observers with appropriate events like "BOARD_INITIALIZED" and "NEW_GAME_STARTED".
      */
     public abstract void initializeGame();
 
     /**
-     * Processes a given {@link GameAction} taken by the player or system.
-     * This method contains the core logic for how an action affects the
-     * game state (e.g., moving a piece, selecting a tile).
-     * It should update the game board, score, and potentially the game status.
-     * Observers should be notified of relevant changes (e.g., "BOARD_CHANGED", "SCORE_UPDATED").
+     * Processes game-specific actions when the game is in the {@link GameStatus#PLAYING} state.
+     * Concrete game models (e.g., {@code SameGameModel}, {@code SokobanModel}) must implement this
+     * method to define how actions unique to that game (like tile selections, character movements,
+     * or hint requests) affect the game state.
+     * <p>
+     * Implementations should:
+     * <ul>
+     * <li>Validate the game-specific action.</li>
+     * <li>If valid, update the game state (board, score, player position, etc.).</li>
+     * <li>Push previous state to {@link #historyStack} if the action is undoable.</li>
+     * <li>Notify observers of relevant changes (e.g., "BOARD_CHANGED", "SCORE_UPDATED", game-specific events).</li>
+     * <li>Call {@link #checkEndGameConditions()} if the action could lead to game end.</li>
+     * <li>If the action is invalid by game rules (but passed initial type checks), notify observers
+     * with an appropriate event (e.g., "INVALID_MOVE", "INVALID_SELECTION").</li>
+     * </ul>
+     * </p>
      *
-     * @param action The {@link GameAction} to process. Must not be null.
+     * @param action The game-specific {@link GameAction} to process.
      */
-    public abstract void processInputAction(GameAction action);
+    protected abstract void processGameSpecificAction(GameAction action);
+
 
     /**
-     * Checks if the given action is valid in the current game state.
-     * This can be used by controllers or views to enable/disable input
-     * or provide feedback to the player.
+     * Checks if a given {@link GameAction} is currently valid according to the game's rules and state.
+     * This method can be used by UI components to enable/disable controls, or by AI
+     * to evaluate potential moves. Concrete game models must implement this to reflect
+     * their specific validation logic for different actions.
      *
      * @param action The {@link GameAction} to validate.
-     * @return {@code true} if the action is valid, {@code false} otherwise.
+     * @return {@code true} if the action is currently valid, {@code false} otherwise.
      */
     public abstract boolean isValidAction(GameAction action);
 
     /**
-     * Checks for win/loss conditions and updates the {@link GameStatus} accordingly.
-     * This method is typically called after each action or game state change.
-     * If the game ends, it should set the status to GAME_OVER_WIN or GAME_OVER_LOSE
-     * and notify observers.
+     * Checks for conditions that signify the end of the game (e.g., win or loss).
+     * This method is typically called by concrete models after an action that changes the game state.
+     * If an end-game condition is met, this method should update the {@link #currentStatus}
+     * (e.g., to {@link GameStatus#GAME_OVER_WIN} or {@link GameStatus#GAME_OVER_LOSE})
+     * which will, in turn, notify observers.
      */
     protected abstract void checkEndGameConditions();
 
     /**
-     * Provides a representation of the game board suitable for views.
-     * This allows different views to render the board without needing to
-     * know the intimate details of the {@link GameEntity} objects themselves,
-     * if the default {@code getVisualRepresentation()} on entities is not sufficient
-     * or if a more complex view model is needed.
-     * <p>
-     * For many games, views can directly iterate over {@code getGameBoard().getEntity(r,c).getVisualRepresentation()}.
-     * This method offers an alternative or supplementary way.
+     * Provides a representation of the game board suitable for views to render.
+     * The nature of this representation (e.g., the raw {@link Grid} object, a 2D array of
+     * display characters or colors, a custom view-model object) is determined by the
+     * concrete game model and the needs of its views.
      *
-     * @return An object (e.g., a 2D array of Colors, Strings, or custom view model objects)
-     * representing the current state of the board for display purposes.
-     * The exact type is determined by the concrete game model and its views.
+     * @return An object representing the current state of the game board for display purposes.
      */
     public abstract Object getBoardViewRepresentation();
+
     /**
-     * Undoes the last move made in the game.
-     * Implementations should restore the game state (board, score, etc.)
-     * from the history.
+     * Reverts the game state to before the last successfully processed and undoable move.
+     * Concrete game models must implement this by popping a saved state from the
+     * {@link #historyStack} and restoring all relevant game attributes (board, score,
+     * player position, specific game counters, etc.).
+     * After restoring, it should set the status (usually to {@link GameStatus#PLAYING})
+     * and notify observers of changes ("BOARD_CHANGED", "UNDO_PERFORMED", etc.).
      */
     public abstract void undoLastMove();
 
     /**
-     * Checks if an undo operation is currently possible.
+     * Checks if an undo operation can currently be performed.
+     * Typically, this means checking if the {@link #historyStack} is not empty.
      *
-     * @return {@code true} if an undo can be performed, {@code false} otherwise.
+     * @return {@code true} if an undo operation is possible, {@code false} otherwise.
      */
     public abstract boolean canUndo();
 }

@@ -1,6 +1,6 @@
 package com.aoopproject.common.score;
 
-import com.aoopproject.games.samegame.DifficultyLevel;
+import com.aoopproject.common.model.DifficultyLevel;
 import java.io.Serializable;
 import java.util.Date;
 

@@ -3,64 +3,83 @@ package com.aoopproject;
 import com.aoopproject.framework.core.AbstractGameController;
 import com.aoopproject.framework.core.GameFactory;
 import com.aoopproject.games.samegame.SameGameFactory;
+import com.aoopproject.games.sokoban.SokobanFactory;
 
 import javax.swing.SwingUtilities;
 import javax.swing.JOptionPane;
 
 /**
- * Main application class for launching games developed under the AOOP Project framework.
- * This class is responsible for initiating the game setup process, including allowing
- * the user to select a game (currently defaults to SameGame) and then delegating
- * the game-specific setup (like difficulty settings) to the corresponding {@link GameFactory}.
+ * Main application class for launching games developed within the AOOP Project framework.
+ * This class serves as the primary entry point. It allows the user to select a game
+ * from available options (e.g., SameGame, Sokoban) and then uses the corresponding
+ * {@link GameFactory} to set up and start the chosen game.
+ * All UI operations are ensured to run on the Swing Event Dispatch Thread (EDT).
  */
 public class MainApplication {
 
     /**
      * The main entry point for the application.
-     * It schedules the launch of a new game session on the Event Dispatch Thread.
+     * This method schedules the {@link #launchNewGame()} process to run on the
+     * Swing Event Dispatch Thread to ensure thread safety for UI operations.
      *
-     * @param args Command-line arguments (not used).
+     * @param args Command-line arguments (not used by this application).
      */
     public static void main(String[] args) {
         launchNewGame();
     }
 
     /**
-     * Initializes and starts a new game session.
-     * This method determines which game to play (currently hardcoded to SameGame but designed
-     * for future expansion to include other games like 2048). It then instantiates the
-     * appropriate {@link GameFactory}. The factory is responsible for handling any game-specific
-     * pre-setup, such as prompting for difficulty settings, before creating and wiring up
-     * the model, view(s), controller, and input strategy.
-     * <p>
-     * If the game setup is cancelled (e.g., user closes the difficulty settings dialog via the factory),
-     * the application will exit. All UI operations are ensured to run on the Swing Event Dispatch Thread.
-     * This method can be called to restart the game after a previous session has ended.
-     * </p>
+     * Initiates a new game session.
+     * <ul>
+     * <li>Prompts the user to select a game (e.g., "SameGame" or "Sokoban") via a dialog.</li>
+     * <li>Based on the user's choice, instantiates the appropriate {@link GameFactory}.</li>
+     * <li>Delegates the game setup (including any game-specific pre-configuration like
+     * difficulty settings, which are handled by the factory itself) to the factory's
+     * {@code setupGame()} method.</li>
+     * <li>If game setup is successful, it initializes and starts the game controller.</li>
+     * <li>Handles cases where game selection or setup is cancelled by the user, or if errors occur
+     * during initialization, by exiting the application gracefully.</li>
+     * </ul>
+     * This method can be called to restart the entire game selection and setup process.
+     * All UI-related parts of the setup are executed on the Swing Event Dispatch Thread.
      */
     public static void launchNewGame() {
         System.out.println("Configuring a new game session...");
-        String chosenGame = "SameGame";
-        GameFactory factory = null;
+        String[] availableGames = {"SameGame", "Sokoban"};
+        String chosenGame = (String) JOptionPane.showInputDialog(
+                null,
+                "Select a game to play:",
+                "Game Launcher - AOOP Project",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                availableGames,
+                availableGames[0]
+        );
 
-        if ("SameGame".equals(chosenGame)) {
-            factory = new SameGameFactory();
-        } else if ("2048".equals(chosenGame)) {
-            System.out.println("Error: 2048 game is not yet implemented. Exiting application.");
-            System.exit(0);
-            return;
-        } else {
-            System.out.println("Unsupported game selected or selection cancelled. Exiting application.");
+        GameFactory factory = null;
+        if (chosenGame == null) {
+            System.out.println("No game selected. Exiting application.");
             System.exit(0);
             return;
         }
 
+        switch (chosenGame) {
+            case "SameGame":
+                factory = new SameGameFactory();
+                break;
+            case "Sokoban":
+                factory = new SokobanFactory();
+                break;
+            default:
+                System.out.println("Unknown game selected (" + chosenGame + "). Exiting application.");
+                System.exit(0);
+                return;
+        }
         final GameFactory finalFactory = factory;
-
         SwingUtilities.invokeLater(() -> {
             AbstractGameController gameController = finalFactory.setupGame();
             if (gameController == null) {
-                System.out.println("Game setup was cancelled (e.g., settings dialog was closed). Exiting application.");
+                System.out.println("Game setup was cancelled or failed (e.g., settings dialog was closed). Exiting application.");
                 System.exit(0);
                 return;
             }
@@ -73,7 +92,7 @@ public class MainApplication {
                 System.err.println("An error occurred during " + chosenGame + " game initialization or startup:");
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null,
-                        "A critical error occurred: " + e.getMessage(),
+                        "A critical error occurred during game startup: " + e.getMessage(),
                         "Application Error", JOptionPane.ERROR_MESSAGE);
                 System.exit(1);
             }

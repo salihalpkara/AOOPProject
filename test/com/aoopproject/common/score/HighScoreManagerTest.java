@@ -1,14 +1,11 @@
 package com.aoopproject.common.score;
 
-import com.aoopproject.games.samegame.DifficultyLevel;
-import org.junit.jupiter.api.AfterEach;
+import com.aoopproject.common.model.DifficultyLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 

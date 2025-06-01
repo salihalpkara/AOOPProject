@@ -1,6 +1,6 @@
 package com.aoopproject.common.score;
 
-import com.aoopproject.games.samegame.DifficultyLevel;
+import com.aoopproject.common.model.DifficultyLevel;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -127,5 +127,8 @@ public class HighScoreManager {
         } catch (IOException e) {
             System.err.println("Error saving high scores to " + filename + ": " + e.getMessage());
         }
+    }
+    public static int getMaxScoresPerLevel() {
+        return MAX_SCORES_PER_LEVEL;
     }
 }

@@ -1,4 +1,4 @@
-package com.aoopproject.games.samegame;
+package com.aoopproject.common.model;
 
 /**
  * Represents the predefined difficulty levels for SameGame.
@@ -39,6 +39,6 @@ public enum DifficultyLevel {
 
     @Override
     public String toString() {
-        return displayName + " (" + rows + "x" + cols + ", " + numColors + " Colors)";
+        return displayName;
     }
 }

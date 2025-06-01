@@ -14,7 +14,7 @@ import java.util.Objects;
  * that extends this class, possibly overriding methods to customize game setup
  * or the main game loop if necessary.
  */
-public abstract class AbstractGameController {
+public class AbstractGameController {
 
     protected AbstractGameModel gameModel;
     protected List<GameView> gameViews;
