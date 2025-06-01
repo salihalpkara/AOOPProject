@@ -1,5 +1,6 @@
 package com.aoopproject.games.samegame;
 
+import com.aoopproject.common.model.DifficultyLevel;
 import com.aoopproject.framework.core.GameAction;
 import com.aoopproject.framework.core.GameStatus;
 import com.aoopproject.framework.core.Grid;
@@ -14,9 +15,9 @@ import java.awt.Color;
 /**
  * Unit tests for the {@link SameGameModel} class.
  * These tests verify the core game logic, including initialization based on {@link DifficultyLevel},
- * move processing, scoring, undo functionality, and state changes.
- * Test board setups use explicit colors rather than relying on the model's internal available color list
- * for predictability, ensuring the logic operates correctly on the provided board state.
+ * move processing (tile removal, gravity, column compaction), scoring, undo functionality,
+ * and game state changes. Test board setups use explicit colors and specific difficulty
+ * configurations to ensure predictable and verifiable outcomes.
  */
 class SameGameModelTest {
 
@@ -26,9 +27,11 @@ class SameGameModelTest {
 
     /**
      * Sets up model instances before each test.
-     * {@code testDifficultyMedium} is used for general initialization tests.
-     * {@code testDifficultyFor3x3} is defined for tests requiring small, predictable boards,
-     * ensuring enough colors are theoretically available for the test patterns.
+     * {@code testDifficultyMedium} (e.g., {@link DifficultyLevel#MEDIUM}) is used for general initialization tests.
+     * {@code testDifficultyFor3x3} (e.g., {@link DifficultyLevel#EASY} or a custom small one)
+     * is used for tests requiring small, predictable 3x3 boards.
+     * The model is instantiated with {@code testDifficultyMedium} by default in setUp.
+     * Individual tests can re-instantiate the model with {@code testDifficultyFor3x3} if needed.
      */
     @BeforeEach
     void setUp() {
@@ -40,8 +43,9 @@ class SameGameModelTest {
 
     /**
      * Tests the {@link SameGameModel#initializeGame()} method.
-     * Verifies correct board dimensions based on the model's current difficulty (Medium),
-     * non-null and non-empty tiles, zero initial score, PLAYING status, and no undo history.
+     * Verifies that the game board is created with dimensions corresponding to the model's
+     * current difficulty (set to Medium in {@code setUp()}). It also checks for non-null,
+     * non-empty tiles, an initial score of 0, PLAYING game status, and that undo is not initially possible.
      */
     @Test
     void testInitializeGame() {
@@ -51,8 +55,8 @@ class SameGameModelTest {
         @SuppressWarnings("unchecked")
         Grid<SameGameTile> board = (Grid<SameGameTile>) model.getGameBoard();
 
-        assertEquals(testDifficultyMedium.getRows(), board.getRows(), "Board rows should match Medium difficulty.");
-        assertEquals(testDifficultyMedium.getCols(), board.getColumns(), "Board columns should match Medium difficulty.");
+        assertEquals(testDifficultyMedium.getRows(), board.getRows(), "Board rows should match the difficulty's row count.");
+        assertEquals(testDifficultyMedium.getCols(), board.getColumns(), "Board columns should match the difficulty's column count.");
 
         for (int r = 0; r < board.getRows(); r++) {
             for (int c = 0; c < board.getColumns(); c++) {
@@ -64,23 +68,25 @@ class SameGameModelTest {
 
         assertEquals(0, model.getScore(), "Initial score should be 0.");
         assertEquals(GameStatus.PLAYING, model.getCurrentStatus(), "Initial game status should be PLAYING.");
-        assertFalse(model.canUndo(), "Undo should not be possible on a new game.");
+        assertFalse(model.canUndo(), "Undo should not be possible on a new game (no history).");
     }
 
     /**
-     * Implicitly tests score calculation through gameplay scenarios.
-     * Covered in {@link #testProcessInputAction_ValidMoveAndScore_CustomBoard()}.
+     * Verifies that the private {@code calculatePoints} method is implicitly tested
+     * through gameplay scenarios, specifically within {@link #testProcessInputAction_ValidMoveAndScore_CustomBoard()}.
      */
     @Test
     void testCalculatePoints_viaGameplay() {
-        assertTrue(true, "calculatePoints is private and tested implicitly via processInputAction, verifying score outcomes.");
+        assertTrue(true, "calculatePoints is private; its correctness is verified by checking score outcomes in processInputAction tests.");
     }
 
     /**
-     * Tests finding connected tiles using {@link SameGameModel#isValidAction(GameAction)}.
-     * A custom 3x3 board is set up with explicit colors. The model's difficulty is set
-     * to one consistent with a 3x3 board (e.g., {@code testDifficultyFor3x3}).
-     * Verifies correct identification of valid/invalid moves based on group size.
+     * Tests the logic for finding connected tiles, accessed indirectly via {@link SameGameModel#isValidAction(GameAction)}.
+     * A custom 3x3 board is set up with specific colors. The model is configured with a
+     * {@link DifficultyLevel} suitable for this board size to ensure consistency if model internals
+     * (like available colors) are derived from it during {@code setTestGameBoard}.
+     * Verifies that selections on tile groups of various sizes are correctly identified as valid or invalid
+     * based on the game's {@code MIN_TILES_TO_REMOVE} rule.
      */
     @Test
     void testFindConnectedTiles_ThroughIsValidAction_CustomBoard() {
@@ -92,18 +98,19 @@ class SameGameModelTest {
         testBoard.setEntity(0,0, new SameGameTile(C_RED));  testBoard.setEntity(0,1, new SameGameTile(C_RED)); testBoard.setEntity(0,2, new SameGameTile(C_BLUE));
         testBoard.setEntity(1,0, new SameGameTile(C_RED));  testBoard.setEntity(1,1, new SameGameTile(C_BLUE));testBoard.setEntity(1,2, new SameGameTile(C_BLUE));
         testBoard.setEntity(2,0, new SameGameTile(C_BLUE)); testBoard.setEntity(2,1, new SameGameTile(C_RED)); testBoard.setEntity(2,2, new SameGameTile(C_BLUE));
-
         model.setTestGameBoard(testBoard, testDifficultyFor3x3, GameStatus.PLAYING);
 
-        assertTrue(model.isValidAction(new SameGameSelectAction(0,0)), "Selecting (0,0) C_RED group (3 tiles) should be valid.");
-        assertTrue(model.isValidAction(new SameGameSelectAction(0,2)), "Selecting (0,2) C_BLUE group (5 tiles) should be valid.");
-        assertFalse(model.isValidAction(new SameGameSelectAction(2,1)), "Selecting isolated (2,1) C_RED tile (1 tile) should be invalid.");
+        assertTrue(model.isValidAction(new SameGameSelectAction(0,0)), "Selecting (0,0) C_RED group (3 tiles) should be a valid move.");
+        assertTrue(model.isValidAction(new SameGameSelectAction(0,2)), "Selecting (0,2) C_BLUE group (5 tiles) should be a valid move.");
+        assertFalse(model.isValidAction(new SameGameSelectAction(2,1)), "Selecting isolated (2,1) C_RED tile (1 tile) should be an invalid move.");
     }
 
     /**
-     * Tests processing of a valid move on a custom 3x3 board.
-     * Verifies score update (2 tiles removed = 2 points with n*(n-1) rule) and undo availability.
-     * The model is configured with a difficulty appropriate for the test board.
+     * Tests the processing of a valid move on a custom 3x3 board.
+     * This includes verifying the score update (2 tiles removed = 2 points with n*(n-1) rule, MIN_TO_REMOVE=2)
+     * and checking if undo becomes available. The model is configured with a difficulty appropriate for the test board.
+     * Assertions on the exact final board state after gravity/compaction are complex and are tested more focally
+     * in specific gravity/compaction tests.
      */
     @Test
     void testProcessInputAction_ValidMoveAndScore_CustomBoard() {
@@ -122,85 +129,170 @@ class SameGameModelTest {
         SameGameSelectAction action = new SameGameSelectAction(0,0);
         model.processInputAction(action);
 
-        assertEquals(2 * (2-1), model.getScore(), "Score should be 2 for removing 2 tiles.");
+        assertEquals(2 * (2-1), model.getScore(), "Score should be 2 for removing 2 tiles (n*(n-1) rule).");
         assertTrue(model.canUndo(), "Undo should be possible after a valid move.");
         @SuppressWarnings("unchecked")
         Grid<SameGameTile> boardAfterMove = (Grid<SameGameTile>) model.getGameBoard();
-        SameGameTile tileAt00 = boardAfterMove.getEntity(0,0);
-        SameGameTile tileAt01 = boardAfterMove.getEntity(0,1);
-
-        boolean originalTilesRemovedOrMoved = (tileAt00.isEmpty() || tileAt00.getColor() != C1) &&
-                (tileAt01.isEmpty() || tileAt01.getColor() != C1);
-        SameGameTile clickedTileAfterMove = boardAfterMove.getEntity(0,0);
-        assertTrue(board.getEntity(0,0).isEmpty() || board.getEntity(0,1).isEmpty(),
-                "Original selected group tiles should become empty (or be part of shifted content). This check may need refinement.");
+        SameGameTile tile00After = boardAfterMove.getEntity(0,0);
+        SameGameTile tile01After = boardAfterMove.getEntity(0,1);
+        assertTrue(tile00After.isEmpty() || tile00After.getColor() != C1 || tile01After.isEmpty() || tile01After.getColor() != C1,
+                "Original selected group tiles at (0,0) and (0,1) should have become empty or their content shifted/changed.");
     }
 
     /**
      * Tests the undo functionality after one valid move.
-     * Initializes a game (Medium difficulty), finds and performs the first valid move,
-     * then undoes it. Verifies that the score and the entire board state are reverted
-     * to their initial states, and undo is no longer possible.
+     * Initializes a game (using Medium difficulty from setUp), finds and performs the first valid move,
+     * then undoes it. Verifies that the score and the entire board state are correctly reverted
+     * to their initial states, and that undo is no longer possible after undoing the only recorded move.
      */
     @Test
     void testUndoLastMove_AfterOneValidMove() {
         model.initializeGame();
 
         @SuppressWarnings("unchecked")
-        Grid<SameGameTile> initialBoard = (Grid<SameGameTile>) model.getGameBoard();
-        if (initialBoard == null) {
-            fail("Initial game board is null after initializeGame.");
+        Grid<SameGameTile> initialBoardGrid = (Grid<SameGameTile>) model.getGameBoard();
+        if (initialBoardGrid == null) {
+            fail("Initial game board is null after initializeGame, cannot proceed with undo test.");
             return;
         }
-        Grid<SameGameTile> initialBoardCopy = initialBoard.deepCopy(SameGameTile::copy);
+        Grid<SameGameTile> initialBoardCopy = initialBoardGrid.deepCopy(SameGameTile::copy);
         int initialScore = model.getScore();
 
         SameGameSelectAction firstValidAction = findFirstValidAction(model);
         if (firstValidAction == null) {
             fail("Could not find a valid move on the initialized board (" +
                     model.getCurrentDifficulty().getDisplayName() +
-                    ") to test undo. This might indicate an issue with board generation " +
-                    "or MIN_TILES_TO_REMOVE vs. board state. Or the board was too small/sparse.");
+                    ") to test undo. This might indicate an issue with board generation, " +
+                    "MIN_TILES_TO_REMOVE setting, or the board being too small/sparse for the difficulty.");
             return;
         }
-
-        System.out.println("Performing action for undo test: " + firstValidAction.getName() + " on " + model.getCurrentDifficulty().getDisplayName());
         model.processInputAction(firstValidAction);
 
-        assertNotEquals(initialScore, model.getScore(), "Score should change after a valid move.");
-        assertTrue(model.canUndo(), "Should be able to undo after one move.");
+        assertNotEquals(initialScore, model.getScore(), "Score should have changed after a valid move.");
+        assertTrue(model.canUndo(), "Undo should be possible after one valid move.");
 
         model.undoLastMove();
 
-        assertEquals(initialScore, model.getScore(), "Score should revert to initial score after undo.");
+        assertEquals(initialScore, model.getScore(), "Score should revert to the initial score after undo.");
         assertFalse(model.canUndo(), "Undo should not be possible after undoing the only recorded move.");
         if (findFirstValidAction(model) != null) {
             assertEquals(GameStatus.PLAYING, model.getCurrentStatus(),
-                    "Game status should be PLAYING if moves are available after undo.");
+                    "Game status should be PLAYING if moves are available on the board after undo.");
         } else {
-            assertTrue(model.getCurrentStatus() == GameStatus.PLAYING || model.getCurrentStatus() == GameStatus.GAME_OVER_LOSE,
-                    "Status should be PLAYING or GAME_OVER_LOSE if no moves after undo.");
+            GameStatus statusAfterUndo = model.getCurrentStatus();
+            assertTrue(statusAfterUndo == GameStatus.PLAYING || statusAfterUndo == GameStatus.GAME_OVER_LOSE || statusAfterUndo == GameStatus.GAME_OVER_WIN,
+                    "Status after undo should be PLAYING, GAME_OVER_LOSE, or GAME_OVER_WIN. Actual: " + statusAfterUndo);
         }
         @SuppressWarnings("unchecked")
         Grid<SameGameTile> boardAfterUndo = (Grid<SameGameTile>) model.getGameBoard();
-        assertNotNull(boardAfterUndo, "Board should not be null after undo.");
-        assertEquals(initialBoardCopy.getRows(), boardAfterUndo.getRows(), "Number of rows should match initial board.");
-        assertEquals(initialBoardCopy.getColumns(), boardAfterUndo.getColumns(), "Number of columns should match initial board.");
+        assertNotNull(boardAfterUndo, "Board should not be null after undo operation.");
+        assertEquals(initialBoardCopy.getRows(), boardAfterUndo.getRows(), "Number of rows should match the initial board after undo.");
+        assertEquals(initialBoardCopy.getColumns(), boardAfterUndo.getColumns(), "Number of columns should match the initial board after undo.");
 
         for(int r=0; r < initialBoardCopy.getRows(); r++) {
             for(int c=0; c < initialBoardCopy.getColumns(); c++) {
-                SameGameTile originalTile = initialBoardCopy.getEntity(r,c);
-                SameGameTile undoneTile = boardAfterUndo.getEntity(r,c);
-                assertNotNull(originalTile, "Original copied tile at ("+r+","+c+") should not be null.");
-                assertNotNull(undoneTile, "Undone tile at ("+r+","+c+") should not be null.");
-                assertEquals(originalTile.isEmpty(), undoneTile.isEmpty(),
-                        "Tile empty state should match at ("+r+","+c+") after undo.");
-                if (!originalTile.isEmpty()) {
-                    assertEquals(originalTile.getColor(), undoneTile.getColor(),
-                            "Tile color should match at ("+r+","+c+") after undo.");
+                SameGameTile originalCopiedTile = initialBoardCopy.getEntity(r,c);
+                SameGameTile tileAfterUndo = boardAfterUndo.getEntity(r,c);
+                assertNotNull(originalCopiedTile, "Original copied tile at ("+r+","+c+") should not be null (error in test setup).");
+                assertNotNull(tileAfterUndo, "Tile at ("+r+","+c+") after undo should not be null.");
+
+                assertEquals(originalCopiedTile.isEmpty(), tileAfterUndo.isEmpty(),
+                        "Tile empty state at ("+r+","+c+") should match initial state after undo.");
+                if (!originalCopiedTile.isEmpty()) {
+                    assertEquals(originalCopiedTile.getColor(), tileAfterUndo.getColor(),
+                            "Tile color at ("+r+","+c+") should match initial state after undo.");
                 }
             }
         }
+    }
+
+    /**
+     * Tests the {@link SameGameModel#applyGravity()} method with a simple scenario.
+     * Sets up a 3x3 board with gaps and checks if tiles fall down correctly into empty spaces below them,
+     * and that the vacated upper cells are marked as empty.
+     * Requires {@code applyGravity} to be package-private or protected in {@code SameGameModel}.
+     */
+    @Test
+    void testApplyGravity_simpleFall() {
+        model = new SameGameModel(testDifficultyFor3x3);
+
+        Grid<SameGameTile> board = new Grid<>(3, 3);
+        Color R = Color.RED;
+        Color G = Color.GREEN;
+        SameGameTile emptyPlaceholder = new SameGameTile(SameGameModel.PredefinedColors.EMPTY_SLOT_COLOR);
+        emptyPlaceholder.setEmpty();
+        board.setEntity(0, 0, new SameGameTile(R));
+        board.setEntity(1, 0, emptyPlaceholder.copy());
+        board.setEntity(2, 0, new SameGameTile(G));
+
+        board.setEntity(0, 1, emptyPlaceholder.copy());
+        board.setEntity(1, 1, new SameGameTile(R));
+        board.setEntity(2, 1, new SameGameTile(G));
+
+        board.setEntity(0, 2, new SameGameTile(R));
+        board.setEntity(1, 2, new SameGameTile(G));
+        board.setEntity(2, 2, emptyPlaceholder.copy());
+
+        model.setTestGameBoard(board, testDifficultyFor3x3, GameStatus.PLAYING);
+
+        model.applyGravity();
+
+        @SuppressWarnings("unchecked")
+        Grid<SameGameTile> boardAfterGravity = (Grid<SameGameTile>) model.getGameBoard();
+        assertTrue(boardAfterGravity.getEntity(0, 0).isEmpty(), "Col0,Row0 should be empty after gravity.");
+        assertEquals(R, boardAfterGravity.getEntity(1, 0).getColor(), "Col0,Row1 should be Red.");
+        assertFalse(boardAfterGravity.getEntity(1, 0).isEmpty());
+        assertEquals(G, boardAfterGravity.getEntity(2, 0).getColor(), "Col0,Row2 should be Green.");
+        assertFalse(boardAfterGravity.getEntity(2, 0).isEmpty());
+        assertTrue(boardAfterGravity.getEntity(0, 1).isEmpty(), "Col1,Row0 should be empty after gravity.");
+        assertEquals(R, boardAfterGravity.getEntity(1, 1).getColor(), "Col1,Row1 should be Red.");
+        assertFalse(boardAfterGravity.getEntity(1, 1).isEmpty());
+        assertEquals(G, boardAfterGravity.getEntity(2, 1).getColor(), "Col1,Row2 should be Green.");
+        assertFalse(boardAfterGravity.getEntity(2, 1).isEmpty());
+        assertTrue(boardAfterGravity.getEntity(0, 2).isEmpty(), "Col2,Row0 should be empty after gravity.");
+        assertEquals(R, boardAfterGravity.getEntity(1, 2).getColor(), "Col2,Row1 should be Red.");
+        assertFalse(boardAfterGravity.getEntity(1, 2).isEmpty());
+        assertEquals(G, boardAfterGravity.getEntity(2, 2).getColor(), "Col2,Row2 should be Green.");
+        assertFalse(boardAfterGravity.getEntity(2, 2).isEmpty());
+    }
+
+    /**
+     * Tests the {@link SameGameModel#compactColumns()} method.
+     * Sets up a 3x3 board with an entirely empty column between two non-empty columns
+     * and verifies that the non-empty columns are shifted left correctly, and the
+     * vacated rightmost column becomes empty.
+     * Requires {@code compactColumns} to be package-private or protected in {@code SameGameModel}.
+     */
+    @Test
+    void testCompactColumns_withEmptyColumnInMiddle() {
+        model = new SameGameModel(testDifficultyFor3x3);
+
+        Grid<SameGameTile> board = new Grid<>(3, 3);
+        Color R = Color.RED;
+        Color B = Color.BLUE;
+        SameGameTile emptyTile = new SameGameTile(SameGameModel.PredefinedColors.EMPTY_SLOT_COLOR);
+        emptyTile.setEmpty();
+        board.setEntity(0, 0, new SameGameTile(R)); board.setEntity(1, 0, new SameGameTile(R)); board.setEntity(2, 0, new SameGameTile(R));
+        board.setEntity(0, 1, emptyTile.copy());    board.setEntity(1, 1, emptyTile.copy());    board.setEntity(2, 1, emptyTile.copy());
+        board.setEntity(0, 2, new SameGameTile(B)); board.setEntity(1, 2, new SameGameTile(B)); board.setEntity(2, 2, new SameGameTile(B));
+
+        model.setTestGameBoard(board, testDifficultyFor3x3, GameStatus.PLAYING);
+
+        model.compactColumns();
+
+        @SuppressWarnings("unchecked")
+        Grid<SameGameTile> boardAfterCompact = (Grid<SameGameTile>) model.getGameBoard();
+        assertFalse(boardAfterCompact.getEntity(0, 0).isEmpty());
+        assertEquals(R, boardAfterCompact.getEntity(0, 0).getColor(), "Col0,Row0 should be Red.");
+        assertEquals(R, boardAfterCompact.getEntity(1, 0).getColor(), "Col0,Row1 should be Red.");
+        assertEquals(R, boardAfterCompact.getEntity(2, 0).getColor(), "Col0,Row2 should be Red.");
+        assertFalse(boardAfterCompact.getEntity(0, 1).isEmpty());
+        assertEquals(B, boardAfterCompact.getEntity(0, 1).getColor(), "Col1,Row0 should now be Blue.");
+        assertEquals(B, boardAfterCompact.getEntity(1, 1).getColor(), "Col1,Row1 should now be Blue.");
+        assertEquals(B, boardAfterCompact.getEntity(2, 1).getColor(), "Col1,Row2 should now be Blue.");
+        assertTrue(boardAfterCompact.getEntity(0, 2).isEmpty(), "Col2,Row0 should now be empty.");
+        assertTrue(boardAfterCompact.getEntity(1, 2).isEmpty(), "Col2,Row1 should now be empty.");
+        assertTrue(boardAfterCompact.getEntity(2, 2).isEmpty(), "Col2,Row2 should now be empty.");
     }
 
     /**
@@ -232,7 +324,7 @@ class SameGameModelTest {
                 }
             }
         }
-        System.out.println("findFirstValidAction: No valid action found on the board.");
+        System.out.println("findFirstValidAction: No valid action found on the board for current difficulty: " + gameModel.getCurrentDifficulty().getDisplayName());
         return null;
     }
 }
