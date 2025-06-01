@@ -9,11 +9,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.JOptionPane;
 
 /**
- * Main application class for launching games developed within the AOOP Project framework.
- * This class serves as the primary entry point. It allows the user to select a game
- * from available options (e.g., SameGame, Sokoban) and then uses the corresponding
- * {@link GameFactory} to set up and start the chosen game.
- * All UI operations are ensured to run on the Swing Event Dispatch Thread (EDT).
+ * The main application entry point for the AOOP Project. It provides a simple UI dialog
+ * to let the user choose between available games (e.g., SameGame, Sokoban) and
+ * starts the selected game using the appropriate {@link GameFactory} implementation.
+ * <p>
+ * All UI interactions are scheduled on the Swing Event Dispatch Thread to ensure
+ * thread safety in accordance with Swing's single-threaded rule.
  */
 public class MainApplication {
 

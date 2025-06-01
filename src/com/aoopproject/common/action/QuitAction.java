@@ -3,7 +3,8 @@ package com.aoopproject.common.action;
 import com.aoopproject.framework.core.GameAction;
 
 /**
- * A generic game action representing the user's intent to quit the current game.
+ * A game action that signals the player's intention to exit the current game session.
+ * Depending on the implementation, it may prompt the user to confirm or save progress.
  */
 public class QuitAction implements GameAction {
     @Override

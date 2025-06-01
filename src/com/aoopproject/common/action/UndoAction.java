@@ -3,7 +3,8 @@ package com.aoopproject.common.action;
 import com.aoopproject.framework.core.GameAction;
 
 /**
- * A game action representing the user's intent to undo the last move.
+ * A game action that allows the player to revert the last performed move.
+ * This action is subject to game-specific rules and limitations regarding undo functionality.
  */
 public class UndoAction implements GameAction {
     @Override
