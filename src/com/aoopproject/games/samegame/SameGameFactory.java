@@ -69,10 +69,23 @@ public class SameGameFactory implements GameFactory {
     }
 
     /**
-     * Creates a list containing a {@link SameGameViewSwing} for SameGame.
-     * The created view will need to have its {@link HighScoreManager} set externally.
-     * @param model The game model (not directly used by view constructor here, but passed for consistency).
-     * @return A list containing the {@link SameGameViewSwing}. Returns an empty list if model is {@code null}.
+     * Creates a list of {@link GameView} instances for the SameGame.
+     * This implementation now creates and returns both a {@link SameGameViewSwing}
+     * for graphical user interaction and a {@link SameGameViewConsole} for
+     * text-based console output. Both views will observe the provided game model.
+     * <p>
+     * The shared {@link com.aoopproject.common.score.HighScoreManager} is typically set on the
+     * {@code SameGameViewSwing} instance later by the {@link #setupGame()} method
+     * before the view's {@code initialize} method is called by the controller.
+     * The {@code initialize} method for both views (which associates them with the model)
+     * will be called by the controller when they are added via {@code controller.addGameView(view)}.
+     * </p>
+     *
+     * @param model The {@link AbstractGameModel} that the views will observe. This model
+     * should not be {@code null} for views to be created meaningfully.
+     * @return A list containing a {@link SameGameViewSwing} instance and a
+     * {@link SameGameViewConsole} instance. Returns an empty list if the provided
+     * model is {@code null}.
      */
     @Override
     public List<GameView> createViews(AbstractGameModel model) {
@@ -80,7 +93,12 @@ public class SameGameFactory implements GameFactory {
         if (model == null) {
             return views;
         }
-        views.add(new SameGameViewSwing());
+        SameGameViewSwing swingView = new SameGameViewSwing();
+
+        views.add(swingView);
+
+        SameGameViewConsole consoleView = new SameGameViewConsole();
+        views.add(consoleView);
         return views;
     }
 
