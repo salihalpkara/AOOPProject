@@ -65,11 +65,4 @@ public class ConsoleInputStrategy implements InputStrategy {
             System.out.println("ConsoleInputStrategy disposed.");
         }
     }
-
-    /**
-     * A simple placeholder action for quitting the game via console.
-     * This should ideally be defined in a more generic way or as part of
-     * the specific game's actions.
-     */
-
 }
