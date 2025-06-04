@@ -31,11 +31,6 @@ public interface GameView extends GameObserver {
     void showView();
 
     /**
-     * Hides or deactivates the view.
-     */
-    void hideView();
-
-    /**
      * Displays a generic message to the user via this view.
      * This could be used for status updates, error messages, or game notifications.
      *

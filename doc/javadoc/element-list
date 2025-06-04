@@ -1,0 +1,13 @@
+com.aoopproject
+com.aoopproject.common.action
+com.aoopproject.common.input
+com.aoopproject.common.model
+com.aoopproject.common.score
+com.aoopproject.framework.core
+com.aoopproject.games.samegame
+com.aoopproject.games.samegame.action
+com.aoopproject.games.samegame.observers
+com.aoopproject.games.sokoban
+com.aoopproject.games.sokoban.action
+com.aoopproject.games.sokoban.model
+com.aoopproject.games.sokoban.view

@@ -272,16 +272,6 @@ public abstract class AbstractGameModel {
     protected abstract void checkEndGameConditions();
 
     /**
-     * Provides a representation of the game board suitable for views to render.
-     * The nature of this representation (e.g., the raw {@link Grid} object, a 2D array of
-     * display characters or colors, a custom view-model object) is determined by the
-     * concrete game model and the needs of its views.
-     *
-     * @return An object representing the current state of the game board for display purposes.
-     */
-    public abstract Object getBoardViewRepresentation();
-
-    /**
      * Reverts the game state to before the last successfully processed and undoable move.
      * Concrete game models must implement this by popping a saved state from the
      * {@link #historyStack} and restoring all relevant game attributes (board, score,

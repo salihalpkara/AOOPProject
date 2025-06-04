@@ -12,17 +12,6 @@ package com.aoopproject.framework.core;
 public interface InputStrategy {
 
     /**
-     * Solicits or retrieves the next game action.
-     * This method might block until an action is available, or it might
-     * return null or a special "no action" GameAction if input is polled.
-     * The exact behavior depends on the concrete implementation.
-     *
-     * @return A {@link GameAction} representing the user's or system's intended action.
-     * Returns {@code null} if no action is currently available and the strategy is non-blocking.
-     */
-    GameAction solicitAction();
-
-    /**
      * Initializes the input strategy. This can be used to set up listeners
      * or resources. For example, a Swing-based input strategy might
      * register mouse listeners to a specific component.

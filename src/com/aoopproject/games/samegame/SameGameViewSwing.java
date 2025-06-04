@@ -7,7 +7,6 @@ import com.aoopproject.framework.core.GameStatus;
 import com.aoopproject.framework.core.GameView;
 import com.aoopproject.framework.core.Grid;
 import com.aoopproject.common.action.UndoAction;
-import com.aoopproject.common.action.NewGameAction;
 import com.aoopproject.common.action.HintRequestAction;
 import com.aoopproject.common.score.HighScoreManager;
 import com.aoopproject.common.score.ScoreEntry;
@@ -405,7 +404,7 @@ public class SameGameViewSwing implements GameView {
                 break;
             case "UNDO_FAILED":
                 if (event.getPayload() instanceof String && frame.isVisible()) {
-                    JOptionPane.showMessageDialog(frame, (String) event.getPayload(), "Undo Failed", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, event.getPayload(), "Undo Failed", JOptionPane.WARNING_MESSAGE);
                 }
                 if (gamePanel != null) gamePanel.clearHighlightGroup();
                 break;
@@ -427,7 +426,7 @@ public class SameGameViewSwing implements GameView {
                 break;
             case "NO_SUGGESTION_AVAILABLE":
                 if (event.getPayload() instanceof String && frame.isVisible()) {
-                    JOptionPane.showMessageDialog(frame, (String) event.getPayload(), "Hint", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, event.getPayload(), "Hint", JOptionPane.INFORMATION_MESSAGE);
                 }
                 if (gamePanel != null) gamePanel.clearHighlightGroup();
                 break;
@@ -610,19 +609,6 @@ public class SameGameViewSwing implements GameView {
             frame.requestFocusInWindow();
         } else {
             System.err.println("SameGameViewSwing.showView(): JFrame (frame) is null. Cannot show view.");
-        }
-    }
-
-    /**
-     * Hides the game window (JFrame) from the user by setting its visibility to false.
-     * The frame object itself is not disposed and can be shown again later.
-     */
-    @Override
-    public void hideView() {
-        if (frame != null) {
-            frame.setVisible(false);
-        } else {
-            System.err.println("SameGameViewSwing.hideView(): JFrame (frame) is null. Cannot hide view.");
         }
     }
 

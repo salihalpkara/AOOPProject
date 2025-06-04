@@ -5,7 +5,7 @@ package com.aoopproject.framework.core;
  * Concrete game implementations (e.g., SameGame, 2048) will provide
  * specific classes that implement this interface to define their tiles,
  * pieces, or other interactive elements.
- *
+ * <p>
  * For example, a {@code Tile} in SameGame or a {@code NumberCell} in 2048
  * would implement this interface.
  */

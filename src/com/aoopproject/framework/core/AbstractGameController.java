@@ -73,7 +73,7 @@ public class AbstractGameController {
      */
     public void setInputStrategy(InputStrategy strategy) {
         this.inputStrategy = Objects.requireNonNull(strategy, "Input strategy cannot be null.");
-        System.out.println("Input strategy set in controller: " + (strategy != null ? strategy.getClass().getSimpleName() : "null"));
+        System.out.println("Input strategy set in controller: " + strategy.getClass().getSimpleName());
 
     }
 
@@ -125,9 +125,6 @@ public class AbstractGameController {
         }
         gameViews.clear();
     }
-    public AbstractGameModel getGameModel() {
-        return this.gameModel;
-    }
 
     /**
      * Processes a game action that has been submitted externally (e.g., by a UI event).
@@ -147,23 +144,4 @@ public class AbstractGameController {
         }
         gameModel.processInputAction(action);
     }
-
-    /**
-     * This method remains for input strategies that poll or block for input,
-     * like a console input or an AI player that computes its next move.
-     * It retrieves an action from the current input strategy and then submits it.
-     */
-    public void processNextActionFromStrategy() {
-        if (inputStrategy == null) {
-            System.err.println("Cannot process next action: Input strategy is not set.");
-            return;
-        }
-        if (gameModel != null && gameModel.getCurrentStatus() == GameStatus.PLAYING) {
-            GameAction action = inputStrategy.solicitAction();
-            if (action != null) {
-                submitUserAction(action);
-            }
-        }
-    }
-
 }

@@ -82,36 +82,22 @@ public class SokobanTile implements GameEntity {
     }
 
     /**
-     * A tile is considered "empty" in terms of its base structure if it's not a wall.
-     * Actual movability onto the tile depends on occupants and is handled by game logic
-     * using methods like {@link #isPlayerWalkable()} or {@link #isBoxPushTarget()}.
+     * Checks if the tile is considered "empty" in terms of its static base structure.
+     * A tile is structurally empty if its base type is not a {@link SokobanBaseType#WALL}.
+     * <p>
+     * Note: This method only considers the tile's fundamental type (wall or passable space).
+     * The actual ability for an entity (like a player or a box) to move onto or occupy
+     * this tile is determined by more detailed game logic within the game model
+     * (e.g., in {@code SokobanModel}), which also considers the tile's current
+     * {@link SokobanOccupant} and the specific rules of movement or pushing.
+     * </p>
      *
-     * @return {@code true} if the tile's base type is not WALL, {@code false} otherwise.
+     * @return {@code true} if the tile's base type is not {@link SokobanBaseType#WALL},
+     * {@code false} if it is a wall (and thus structurally not empty).
      */
     @Override
     public boolean isEmpty() {
         return baseType != SokobanBaseType.WALL;
-    }
-
-    /**
-     * Checks if a box can be pushed onto this tile.
-     * A box can be pushed onto a FLOOR or a TARGET tile if it's currently not occupied by another box or player.
-     * @return true if a box can be pushed here, false otherwise.
-     */
-    public boolean isBoxPushTarget() {
-        return (baseType == SokobanBaseType.FLOOR || baseType == SokobanBaseType.TARGET) &&
-                occupant == SokobanOccupant.NONE;
-    }
-
-    /**
-     * Checks if the player can walk onto this tile.
-     * Player can walk onto a FLOOR or a TARGET tile if it's not currently occupied by a BOX.
-     * (Player occupying a tile means the player *is* there, so this check is for moving *to* a tile).
-     * @return true if the player can walk here, false otherwise.
-     */
-    public boolean isPlayerWalkable() {
-        return (baseType == SokobanBaseType.FLOOR || baseType == SokobanBaseType.TARGET) &&
-                occupant != SokobanOccupant.BOX;
     }
 
     /**

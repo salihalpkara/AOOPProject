@@ -11,10 +11,6 @@ import com.aoopproject.framework.core.InputStrategy;
 import com.aoopproject.games.samegame.observers.SameGameSoundObserver;
 
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import java.awt.GridLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -178,7 +174,7 @@ public class SameGameFactory implements GameFactory {
             strategy.initialize(swingViewInstance);
         } else {
             System.err.println("SameGameFactory: WARNING - No SameGameViewSwing instance found to initialize MouseInputStrategy.");
-            strategy.initialize(views.isEmpty() ? null : views.get(0));
+            strategy.initialize(views.isEmpty() ? null : views.getFirst());
         }
         controller.setInputStrategy(strategy);
         SameGameSoundObserver soundObserver = new SameGameSoundObserver(highScoreManager);

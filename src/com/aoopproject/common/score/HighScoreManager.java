@@ -18,7 +18,7 @@ import java.util.Map;
  * from a file using Java serialization.
  */
 public class HighScoreManager {
-    private Map<DifficultyLevel, List<ScoreEntry>> allHighScores;
+    private final Map<DifficultyLevel, List<ScoreEntry>> allHighScores;
     private final String filename;
     private static final int MAX_SCORES_PER_LEVEL = 10;
 
@@ -51,7 +51,7 @@ public class HighScoreManager {
         scoresForLevel.add(newEntry);
         Collections.sort(scoresForLevel);
         while (scoresForLevel.size() > MAX_SCORES_PER_LEVEL) {
-            scoresForLevel.remove(scoresForLevel.size() - 1);
+            scoresForLevel.removeLast();
         }
 
         allHighScores.put(difficulty, scoresForLevel);
@@ -73,7 +73,7 @@ public class HighScoreManager {
         if (scoresForLevel.size() < MAX_SCORES_PER_LEVEL) {
             return true;
         }
-        return score > scoresForLevel.get(scoresForLevel.size() - 1).score();
+        return score > scoresForLevel.getLast().score();
     }
 
 
@@ -96,7 +96,7 @@ public class HighScoreManager {
      */
     public ScoreEntry getTopScore(DifficultyLevel difficulty) {
         List<ScoreEntry> scoresForLevel = allHighScores.getOrDefault(difficulty, new ArrayList<>());
-        return scoresForLevel.isEmpty() ? null : scoresForLevel.get(0);
+        return scoresForLevel.isEmpty() ? null : scoresForLevel.getFirst();
     }
 
     /**

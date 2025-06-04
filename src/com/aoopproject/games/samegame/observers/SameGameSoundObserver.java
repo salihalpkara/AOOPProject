@@ -1,6 +1,5 @@
 package com.aoopproject.games.samegame.observers;
 
-import com.aoopproject.framework.core.AbstractGameModel;
 import com.aoopproject.framework.core.GameEvent;
 import com.aoopproject.framework.core.GameObserver;
 import com.aoopproject.framework.core.GameStatus;
@@ -27,7 +26,6 @@ import java.util.Objects;
 public class SameGameSoundObserver implements GameObserver {
 
     private final Map<String, String> eventSoundMap;
-    private boolean soundsEnabled = true;
     private final HighScoreManager highScoreManager;
 
     /**
@@ -53,14 +51,6 @@ public class SameGameSoundObserver implements GameObserver {
     }
 
     /**
-     * Enables or disables sound playback.
-     * @param enabled {@code true} to enable sounds, {@code false} to disable.
-     */
-    public void setSoundsEnabled(boolean enabled) {
-        this.soundsEnabled = enabled;
-    }
-
-    /**
      * Handles game events received from the {@link SameGameModel}.
      * For game end events (win/loss detected via "STATUS_CHANGED"), this method checks
      * with the {@link HighScoreManager} if the current score is a new high score for the
@@ -72,9 +62,7 @@ public class SameGameSoundObserver implements GameObserver {
      */
     @Override
     public void onGameEvent(GameEvent event) {
-        if (!soundsEnabled) {
-            return;
-        }
+
         if (event == null || event.getSource() == null) {
             System.err.println("SoundObserver: Received null event or event with null source.");
             return;
@@ -85,21 +73,11 @@ public class SameGameSoundObserver implements GameObserver {
         Object eventSource = event.getSource();
 
         switch (eventType) {
-            case "TILES_REMOVED_SUCCESS":
-                soundFileToPlay = eventSoundMap.get(eventType);
-                break;
-            case "INVALID_SELECTION":
-                soundFileToPlay = eventSoundMap.get(eventType);
-                break;
-            case "UNDO_PERFORMED":
-                soundFileToPlay = eventSoundMap.get(eventType);
-                break;
-            case "NEW_GAME_STARTED":
+            case "TILES_REMOVED_SUCCESS", "INVALID_SELECTION", "UNDO_PERFORMED", "NEW_GAME_STARTED":
                 soundFileToPlay = eventSoundMap.get(eventType);
                 break;
             case "NEW_HIGH_SCORE_ACHIEVED":
                 System.out.println("SoundObserver: NEW_HIGH_SCORE_ACHIEVED event noted by observer.");
-                soundFileToPlay = null;
                 break;
             case "STATUS_CHANGED":
                 if (event.getPayload() instanceof GameStatus && eventSource instanceof SameGameModel) {

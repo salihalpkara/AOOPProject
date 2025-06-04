@@ -94,15 +94,6 @@ public class SameGameModel extends AbstractGameModel {
     }
 
     /**
-     * Returns the maximum number of distinct colors supported by the game's predefined palette.
-     * This can be used by UI elements or factories to inform about color limits.
-     * @return The maximum number of supported colors from the palette.
-     */
-    public static int getMaxSupportedColors() {
-        return PredefinedColors.PALETTE.size();
-    }
-
-    /**
      * Initializes or resets the game to its starting state based on the {@code currentDifficulty}.
      * This involves:
      * <ul>
@@ -232,8 +223,8 @@ public class SameGameModel extends AbstractGameModel {
 
         if (action instanceof SameGameSelectAction) {
             SameGameSelectAction selectAction = (SameGameSelectAction) action;
-            int r = selectAction.getRow();
-            int c = selectAction.getColumn();
+            int r = selectAction.row();
+            int c = selectAction.column();
 
             if (gameBoard == null || !gameBoard.isValidCoordinate(r, c)) {
                 System.err.println("SameGameModel: Invalid coordinates for selection: (" + r + "," + c + ")");
@@ -342,8 +333,8 @@ public class SameGameModel extends AbstractGameModel {
             return false;
         }
         SameGameSelectAction selectAction = (SameGameSelectAction) action;
-        int r = selectAction.getRow();
-        int c = selectAction.getColumn();
+        int r = selectAction.row();
+        int c = selectAction.column();
 
         if (gameBoard == null || !gameBoard.isValidCoordinate(r, c)) {
             return false;
@@ -488,7 +479,7 @@ public class SameGameModel extends AbstractGameModel {
         visited.add(new SameGameTilePosition(startRow, startCol));
 
         while(!stack.isEmpty()){
-            SameGameTilePosition currentPos = stack.remove(stack.size() -1);
+            SameGameTilePosition currentPos = stack.removeLast();
             connected.add(currentPos);
             int r = currentPos.row;
             int c = currentPos.col;
@@ -623,18 +614,6 @@ public class SameGameModel extends AbstractGameModel {
             return numRemoved * (numRemoved - 1);
         }
         return 0;
-    }
-
-    /**
-     * Provides the game board itself as the data representation for views.
-     * Views can then iterate over this {@link Grid} and use {@link SameGameTile#getVisualRepresentation()}
-     * or {@link SameGameTile#toString()} for display purposes.
-     *
-     * @return The current {@link Grid} of {@link SameGameTile}s, or {@code null} if not initialized.
-     */
-    @Override
-    public Object getBoardViewRepresentation() {
-        return this.gameBoard;
     }
 
     /**

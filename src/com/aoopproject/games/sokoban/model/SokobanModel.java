@@ -12,8 +12,6 @@ import com.aoopproject.framework.core.Grid;
 import com.aoopproject.games.sokoban.action.Direction;
 import com.aoopproject.games.sokoban.action.SokobanMoveAction;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -113,14 +111,6 @@ public class SokobanModel extends AbstractGameModel {
     }
 
     /**
-     * Gets the current difficulty level of the game.
-     * @return The current {@link DifficultyLevel}.
-     */
-    public DifficultyLevel getCurrentDifficulty() {
-        return currentDifficulty;
-    }
-
-    /**
      * Initializes or resets the game to the starting state of a level.
      * If {@code this.currentLevelData} was pre-set by a constructor, that level is used.
      * Otherwise, a level is chosen based on {@code this.currentDifficulty}.
@@ -128,7 +118,6 @@ public class SokobanModel extends AbstractGameModel {
      * resets score, sets status to PLAYING, clears undo history, and notifies observers.
      */
     @Override
-    @SuppressWarnings("unchecked")
     public void initializeGame() {
         String[] levelDataToParse;
 
@@ -138,11 +127,11 @@ public class SokobanModel extends AbstractGameModel {
             if (this.currentDifficulty == null) this.currentDifficulty = DifficultyLevel.MEDIUM;
         } else if (this.currentDifficulty != null) {
             System.out.println("SokobanModel.initializeGame: Choosing level based on difficulty: " + this.currentDifficulty.getDisplayName());
-            switch (this.currentDifficulty) {
-                case EASY:   levelDataToParse = LEVEL_EASY_DEFAULT; break;
-                case HARD:   levelDataToParse = LEVEL_HARD_DEFAULT; break;
-                case MEDIUM: default: levelDataToParse = LEVEL_MEDIUM_DEFAULT; break;
-            }
+            levelDataToParse = switch (this.currentDifficulty) {
+                case EASY -> LEVEL_EASY_DEFAULT;
+                case HARD -> LEVEL_HARD_DEFAULT;
+                default -> LEVEL_MEDIUM_DEFAULT;
+            };
             this.currentLevelData = levelDataToParse;
         } else {
             System.err.println("SokobanModel.initializeGame: CRITICAL - No level data and no difficulty. Using MEDIUM default level.");
@@ -219,7 +208,7 @@ public class SokobanModel extends AbstractGameModel {
 
         int r = this.playerRow;
         int c = this.playerCol;
-        Direction dir = moveAction.getDirection();
+        Direction dir = moveAction.direction();
         int dr = dir.getDeltaRow();
         int dc = dir.getDeltaColumn();
 
@@ -341,7 +330,7 @@ public class SokobanModel extends AbstractGameModel {
 
             int r = this.playerRow;
             int c = this.playerCol;
-            Direction dir = moveAction.getDirection();
+            Direction dir = moveAction.direction();
             int dr = dir.getDeltaRow();
             int dc = dir.getDeltaColumn();
             int nextPlayerR = r + dr;
@@ -376,12 +365,6 @@ public class SokobanModel extends AbstractGameModel {
         if (this.totalTargets > 0 && this.boxesOnTargets == this.totalTargets) {
             setCurrentStatus(GameStatus.GAME_OVER_WIN);
         }
-    }
-
-    /** @return The current game board. */
-    @Override
-    public Object getBoardViewRepresentation() {
-        return this.gameBoard;
     }
 
     /** @return The player's current row. */

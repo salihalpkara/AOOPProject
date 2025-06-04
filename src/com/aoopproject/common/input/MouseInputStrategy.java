@@ -64,21 +64,6 @@ public class MouseInputStrategy implements InputStrategy {
         System.out.println("MouseInputStrategy initialized and attached to GamePanel.");
     }
 
-    /**
-     * For an event-driven strategy like mouse input with Swing, this method might not be
-     * actively used if actions are directly submitted to the controller via listeners.
-     * It could block indefinitely or throw an UnsupportedOperationException.
-     * For this implementation, it will return null or could be made to block if a
-     * hybrid model was desired (not typical for GUI mouse input).
-     *
-     * @return null, as actions are submitted directly by the mouse listener.
-     */
-    @Override
-    public GameAction solicitAction() {
-        System.out.println("MouseInputStrategy.solicitAction() called, but actions are event-driven. Returning null.");
-        return null;
-    }
-
     @Override
     public void dispose() {
         if (this.gamePanel != null) {

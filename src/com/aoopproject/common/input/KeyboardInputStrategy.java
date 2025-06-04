@@ -1,7 +1,6 @@
 package com.aoopproject.common.input;
 
 import com.aoopproject.framework.core.AbstractGameController;
-import com.aoopproject.framework.core.GameAction;
 import com.aoopproject.framework.core.GameView;
 import com.aoopproject.framework.core.InputStrategy;
 import com.aoopproject.games.sokoban.action.Direction;
@@ -23,7 +22,7 @@ public class KeyboardInputStrategy implements InputStrategy {
 
     private JFrame targetFrame;
     private AbstractGameController gameController;
-    private GameKeyListener keyListener;
+    private final GameKeyListener keyListener;
 
     /**
      * Constructs a KeyboardInputStrategy.
@@ -78,18 +77,6 @@ public class KeyboardInputStrategy implements InputStrategy {
         this.targetFrame.setFocusable(true);
         this.targetFrame.requestFocusInWindow();
         System.out.println("KeyboardInputStrategy initialized and attached to JFrame.");
-    }
-
-    /**
-     * For an event-driven strategy like keyboard input with Swing, this method is not
-     * actively used if actions are directly submitted to the controller via listeners.
-     * It returns null as actions are handled by the KeyListener.
-     *
-     * @return null, as actions are submitted directly by the key listener.
-     */
-    @Override
-    public GameAction solicitAction() {
-        return null;
     }
 
     /**

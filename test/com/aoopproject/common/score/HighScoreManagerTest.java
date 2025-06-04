@@ -36,11 +36,6 @@ class HighScoreManagerTest {
     }
 
     /**
-     * Optional: Cleans up the test file after each test if not using @TempDir's auto-cleanup effectively,
-     * or if specific cleanup logic is needed. @TempDir usually handles this.
-     */
-
-    /**
      * Tests adding a single score to an empty list for a specific difficulty.
      * Verifies that the score is added, the list size is 1, and it's the top score.
      */
@@ -51,9 +46,9 @@ class HighScoreManagerTest {
 
         List<ScoreEntry> easyScores = highScoreManager.getHighScores(DifficultyLevel.EASY);
         assertEquals(1, easyScores.size(), "Easy scores list should have 1 entry.");
-        assertEquals("Player1", easyScores.get(0).playerName(), "Player name should match.");
-        assertEquals(100, easyScores.get(0).score(), "Score should match.");
-        assertEquals(DifficultyLevel.EASY, easyScores.get(0).difficulty(), "Difficulty should match.");
+        assertEquals("Player1", easyScores.getFirst().playerName(), "Player name should match.");
+        assertEquals(100, easyScores.getFirst().score(), "Score should match.");
+        assertEquals(DifficultyLevel.EASY, easyScores.getFirst().difficulty(), "Difficulty should match.");
 
         ScoreEntry topEasyScore = highScoreManager.getTopScore(DifficultyLevel.EASY);
         assertNotNull(topEasyScore, "Top score for Easy should not be null.");
@@ -66,7 +61,6 @@ class HighScoreManagerTest {
      */
     @Test
     void testAddScore_fillUpListAndOrder() {
-        int maxScores = 10;
 
         highScoreManager.addScore(DifficultyLevel.MEDIUM, "P1", 10);
         highScoreManager.addScore(DifficultyLevel.MEDIUM, "P2", 50);
@@ -168,7 +162,7 @@ class HighScoreManagerTest {
 
         List<ScoreEntry> loadedMediumScores = manager2.getHighScores(DifficultyLevel.MEDIUM);
         assertEquals(1, loadedMediumScores.size(), "Should load 1 medium score.");
-        assertEquals(250, loadedMediumScores.get(0).score(), "Loaded MedPlayer1 score mismatch.");
+        assertEquals(250, loadedMediumScores.getFirst().score(), "Loaded MedPlayer1 score mismatch.");
 
         List<ScoreEntry> loadedHardScores = manager2.getHighScores(DifficultyLevel.HARD);
         assertTrue(loadedHardScores.isEmpty(), "Hard scores should be empty as none were added.");

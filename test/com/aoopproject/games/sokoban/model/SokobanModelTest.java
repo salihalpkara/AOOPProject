@@ -1,6 +1,5 @@
 package com.aoopproject.games.sokoban.model;
 
-import com.aoopproject.common.action.UndoAction;
 import com.aoopproject.common.model.DifficultyLevel;
 import com.aoopproject.framework.core.GameAction;
 import com.aoopproject.framework.core.GameStatus;

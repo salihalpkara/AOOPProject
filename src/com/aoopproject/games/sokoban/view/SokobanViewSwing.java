@@ -165,7 +165,7 @@ public class SokobanViewSwing implements GameView {
                 break;
             case "UNDO_FAILED":
                 if (event.getPayload() instanceof String && frame.isVisible()) {
-                    JOptionPane.showMessageDialog(frame, (String) event.getPayload(), "Undo Failed", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, event.getPayload(), "Undo Failed", JOptionPane.WARNING_MESSAGE);
                 }
                 break;
         }
@@ -245,17 +245,28 @@ public class SokobanViewSwing implements GameView {
         }
     }
 
-    /** Hides the game window. */
-    @Override
-    public void hideView() { if (frame != null) frame.setVisible(false); }
-
     /** Displays a generic message dialog. @param message The message to display. */
     @Override
-    public void displayMessage(String message) { /* ... (SameGameViewSwing'deki gibi) ... */ }
+    public void displayMessage(String message) {
+        if (frame != null && frame.isVisible()) {
+            JOptionPane.showMessageDialog(frame, message, "Game Message", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            System.out.println("SokobanViewSwing (Frame not visible or null) Message: " + message);
+        }
+    }
 
     /** Disposes of the main game JFrame. */
     @Override
-    public void dispose() { /* ... (SameGameViewSwing'deki gibi) ... */ }
+    public void dispose() {
+        if (frame != null) {
+            System.out.println("SokobanViewSwing: Disposing JFrame.");
+            frame.dispose();
+            frame = null;
+        } else {
+            System.out.println("SokobanViewSwing: Dispose called, but JFrame (frame) was already null.");
+        }
+        viewInitialized = false;
+    }
 
     /**
      * Inner class for drawing the Sokoban game board using images.
@@ -263,7 +274,7 @@ public class SokobanViewSwing implements GameView {
     public class GamePanel extends JPanel {
         private int numRows;
         private int numCols;
-        private Map<String, Image> imageCache;
+        private final Map<String, Image> imageCache;
 
         /**
          * Constructs a GamePanel with initial dimensions.
@@ -274,8 +285,6 @@ public class SokobanViewSwing implements GameView {
             setGridDimensions(rows, cols);
             this.imageCache = new HashMap<>();
         }
-
-
 
         /**
          * Loads all necessary Sokoban images into the cache if not already loaded.
@@ -329,7 +338,6 @@ public class SokobanViewSwing implements GameView {
                     return;
                 }
             }
-
 
             Graphics2D g2d = (Graphics2D) g.create();
             try {

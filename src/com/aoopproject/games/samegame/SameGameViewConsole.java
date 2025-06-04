@@ -5,8 +5,6 @@ import com.aoopproject.framework.core.GameEvent;
 import com.aoopproject.framework.core.GameView;
 import com.aoopproject.framework.core.Grid;
 
-import java.awt.Color;
-
 /**
  * A console-based view for the SameGame.
  * It renders the game board and score to the standard output.
@@ -76,7 +74,7 @@ public class SameGameViewConsole implements GameView {
             for (int c = 0; c < board.getColumns(); c++) {
                 SameGameTile tile = board.getEntity(r, c);
                 if (tile != null) {
-                    System.out.print(tile.toString());
+                    System.out.print(tile);
                 } else {
                     System.out.print("[ ]");
                 }
@@ -97,11 +95,6 @@ public class SameGameViewConsole implements GameView {
     public void showView() {
         System.out.println("Console View is now active.");
         render();
-    }
-
-    @Override
-    public void hideView() {
-        System.out.println("Console View is now hidden.");
     }
 
     @Override
